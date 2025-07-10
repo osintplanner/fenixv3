@@ -5,6 +5,7 @@ import threading
 import time
 import traceback
 from flask import Flask, render_template, request, jsonify
+from werkzeug.serving import run_simple # Mantenha para desenvolvimento local se quiser
 
 # Importar módulos utilitários
 from utils.wallet_derivation import derive_addresses
@@ -12,8 +13,9 @@ from utils.blockchain_api import get_blockchain_data
 
 # --- Configurações da Aplicação ---
 DEBUG_MODE = True
-FLASK_PORT = 5000
-FLASK_HOST = '127.0.0.1'
+# Obtenha a porta do ambiente (Render, Heroku, etc.) ou use 5000 como fallback local
+PORT = int(os.environ.get("PORT", 5000))
+HOST = '0.0.0.0' # O Render precisa que você escute em 0.0.0.0
 
 # --- Inicialização do Flask ---
 app = Flask(__name__)
@@ -155,22 +157,31 @@ def run_flask_app_in_thread():
     """
     Inicia o servidor Flask.
     """
-    url = f"http://{FLASK_HOST}:{FLASK_PORT}"
+    url = f"http://{HOST}:{PORT}" # Use HOST e PORT dinâmicos
     print(f"Servidor Flask rodando em {url}")
-    from werkzeug.serving import run_simple
-    run_simple(FLASK_HOST, FLASK_PORT, app, use_reloader=False, use_debugger=False)
+    # Para deploy em produção, é fortemente recomendado usar um servidor WSGI como Gunicorn.
+    # Mas para o Werkzeug direto (como você está usando), a chamada é a seguinte:
+    run_simple(HOST, PORT, app, use_reloader=False, use_debugger=False) # Use HOST e PORT dinâmicos
 
 # --- Ponto de Entrada Principal ---
 if __name__ == '__main__':
-    flask_thread = threading.Thread(target=run_flask_app_in_thread)
-    flask_thread.daemon = True
-    flask_thread.start()
+    # Se estiver rodando localmente (não no Render), abra o navegador.
+    # No Render, não é necessário e não funcionaria.
+    if "PORT" not in os.environ: # Verifica se a variável PORT do ambiente não está definida (indicando ambiente local)
+        flask_thread = threading.Thread(target=run_flask_app_in_thread)
+        flask_thread.daemon = True
+        flask_thread.start()
 
-    open_browser_after_delay(f"http://{FLASK_HOST}:{FLASK_PORT}")
+        open_browser_after_delay(f"http://{HOST}:{PORT}")
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nAplicação encerrada pelo usuário.")
-        os._exit(0)
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\nAplicação encerrada pelo usuário.")
+            os._exit(0)
+    else: # Se estiver no Render, apenas inicie o servidor Flask diretamente.
+        print(f"Servidor Flask iniciando no Render em {HOST}:{PORT}")
+        # No ambiente do Render, `run_simple` diretamente no thread principal já serve
+        # porque o Render irá gerenciar o ciclo de vida do processo.
+        run_simple(HOST, PORT, app, use_reloader=False, use_debugger=False)
