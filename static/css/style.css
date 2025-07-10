@@ -1,0 +1,488 @@
+/* Importação de fontes modernas */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* Cores modernas - tema escuro sofisticado */
+    --background-dark: #121212;
+    --surface-dark: #1e1e1e;
+    --surface-darker: #252525;
+    --card-background: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --accent-primary: #7b61ff;
+    --accent-secondary: #00d4ff;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --error-color: #f44336;
+    --border-color: #3a3a3a;
+    --hover-color: rgba(123, 97, 255, 0.1);
+    --focus-glow: rgba(123, 97, 255, 0.4);
+
+    /* Espaçamentos */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+
+    /* Bordas */
+    --border-radius-sm: 6px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--background-dark);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    line-height: 1.6;
+}
+
+.container {
+    width: 100%; /* Ensures it takes full available width within its parent */
+    max-width: 1600px; /* Increased max-width for overall page content */
+    padding: var(--space-xl);
+    margin: var(--space-xl) auto;
+    box-sizing: border-box; /* Includes padding in the element's total width and height */
+}
+
+/* Cabeçalho */
+.header {
+    text-align: center;
+    margin-bottom: var(--space-xxl);
+    position: relative;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+.header .version {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-sm);
+    display: block;
+}
+
+.header .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-md);
+    font-weight: 400;
+}
+
+/* Cards */
+.card {
+    background: var(--card-background);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+}
+
+.card h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: var(--space-lg);
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+}
+
+.card h2::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 24px;
+    background: linear-gradient(var(--accent-primary), var(--accent-secondary));
+    margin-right: var(--space-md);
+    border-radius: 44px;
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px var(--space-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    background-color: var(--surface-dark);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box; /* Crucial for full width without overflow */
+}
+
+.form-control:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--focus-glow);
+    outline: none;
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Checkboxes */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    margin-right: var(--space-sm);
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.checkbox-item input[type="checkbox"]:checked {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.checkbox-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.checkbox-item label {
+    margin-bottom: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Botões */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    box-shadow: 0 4px 12px rgba(123, 97, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(123, 97, 255, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: var(--surface-darker);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-dark);
+    border-color: var(--accent-primary);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Tabela de resultados */
+.results-area {
+    margin-top: var(--space-xl);
+    display: none;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+#resultsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-lg);
+    table-layout: fixed; /* Keep fixed for precise column control */
+}
+
+#resultsTable th, #resultsTable td {
+    border: 1px solid var(--border-color);
+    padding: var(--space-md);
+    text-align: left; /* Ensure text is left-aligned by default for all cells */
+    word-wrap: break-word; /* Allow long words to break */
+    font-size: 0.85rem; /* Slightly reduced for better fit */
+}
+
+#resultsTable th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-darker);
+    z-index: 10;
+}
+
+/* Ajuste específico para colunas - Updated widths */
+#resultsTable th:nth-child(1), #resultsTable td:nth-child(1) { width: 15%; } /* Endereço */
+#resultsTable th:nth-child(2), #resultsTable td:nth-child(2) { width: 7%; }  /* Rede */
+#resultsTable th:nth-child(3), #resultsTable td:nth-child(3) { width: 10%; } /* Saldo/Status */
+#resultsTable th:nth-child(4), #resultsTable td:nth-child(4) { width: 9%; } /* Saldo USD */
+#resultsTable th:nth-child(5), #resultsTable td:nth-child(5) { width: 15%; } /* Caminho Derivação */
+#resultsTable th:nth-child(6), #resultsTable td:nth-child(6) { width: 39%; } /* Chave Privada - Increased width */
+#resultsTable th:nth-child(7), #resultsTable td:nth-child(7) { width: 5%; white-space: nowrap; text-align: center; }  /* Explorador */
+
+/* Rodapé da tabela para o total USD */
+#resultsTable tfoot {
+    font-weight: 600;
+    background: var(--surface-darker);
+    color: var(--accent-primary);
+}
+
+#resultsTable tfoot td {
+    padding: var(--space-md);
+    border-top: 2px solid var(--accent-primary); /* Highlighted line */
+    text-align: right; /* Aligns the total to the right */
+}
+
+#resultsTable tfoot td.total-usd {
+    text-align: left; /* Ensures 'Total USD' text aligns with the USD column */
+    color: var(--accent-primary);
+}
+
+
+/* Indicadores */
+.indicator-saldo {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.indicator-historico {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.indicator-vazio {
+    color: var(--text-secondary);
+}
+
+/* Chave privada - now with space for the button and line breaks */
+.private-key-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; /* Slightly smaller for better fit */
+    word-break: break-all; /* Allows any long word to break */
+    user-select: text; /* Allows text selection */
+    color: var(--text-secondary);
+    display: flex; /* To align text and button */
+    flex-direction: row; /* Ensure flex items are in a row */
+    align-items: center; /* ALIGN ITEMS CENTER TO AVOID BUTTON DISPLACEMENT */
+    justify-content: space-between; /* PUSHES TEXT LEFT, BUTTON RIGHT */
+    flex-wrap: nowrap; /* Prevent button from wrapping to next line initially */
+    padding: 0; /* REMOVE PADDING FROM THE FLEX CONTAINER ITSELF */
+    box-sizing: border-box; 
+    border: none; /* Explicitly remove any borders within the cell */
+    outline: none; /* Explicitly remove any outlines within the cell */
+}
+
+/* Styles for the actual text span inside the private key cell */
+.private-key-cell span {
+    flex-grow: 1; /* Allows the text to occupy max available space */
+    min-width: 0; /* Allows content to shrink beyond intrinsic size if necessary */
+    padding: 0;
+    margin: 0;
+    word-break: break-all; /* Re-applied here for certainty */
+    margin-right: 5px; /* Added explicit right margin */
+}
+
+/* Estilo para o botão de cópia */
+.copy-btn {
+    background: var(--surface-dark);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0; /* Prevents the button from shrinking */
+    line-height: 1; /* Ensures the icon is well-aligned */
+    white-space: nowrap; /* Ensures the button text doesn't break */
+}
+
+.copy-btn:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Resumo */
+.summary-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-dark);
+    padding: var(--space-md);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--space-lg);
+    border-left: 4px solid var(--accent-primary);
+}
+
+.summary-info p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.summary-info strong {
+    color: var(--accent-primary);
+}
+
+/* Mensagens de erro */
+.error-message {
+    background: rgba(244, 67, 54, 0.2);
+    color: var(--error-color);
+    padding: var(--space-md);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--space-lg);
+    border-left: 4px solid var(--error-color);
+    display: none;
+}
+
+/* Spinner */
+.spinner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-style: italic;
+    color: var(--accent-primary);
+}
+
+.spinner::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(123, 97, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--accent-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .card {
+        padding: var(--space-md);
+    }
+    
+    .checkbox-group {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+    
+    .summary-info {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: flex-start;
+    }
+    
+    #resultsTable th, #resultsTable td {
+        padding: var(--space-sm);
+        font-size: 0.7rem; /* Adjust for smaller screens */
+    }
+
+    /* Adjust column widths for smaller screens if necessary */
+    #resultsTable th:nth-child(1), #resultsTable td:nth-child(1) { width: 20%; } /* Address */
+    #resultsTable th:nth-child(2), #resultsTable td:nth-child(2) { width: 8%; } /* Network */
+    #resultsTable th:nth-child(3), #resultsTable td:nth-child(3) { width: 12%; } /* Balance/Status */
+    #resultsTable th:nth-child(4), #resultsTable td:nth-child(4) { width: 10%; } /* USD Balance */
+    #resultsTable th:nth-child(5), #resultsTable td:nth-child(5) { width: 20%; } /* Derivation Path */
+    #resultsTable th:nth-child(6), #resultsTable td:nth-child(6) { width: 25%; } /* Private Key */
+    #resultsTable th:nth-child(7), #resultsTable td:nth-child(7) { width: 10%; }  /* Explorer */
+}
+
+/* Transition effect for cards */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fênix - Localizador de Ativos Digitais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Fênix</h1>
+            <span class="version">V.0.3</span>
+            <p class="subtitle">Localizador de Ativos Digitais em Carteiras Cripto</p>
+        </div>
+
+        <div class="card">
+            <h2>1. Dados da Seed</h2>
+            <div class="form-group">
+                <label for="seedPhrase">Seed Mnemônica (12 ou 24 palavras)</label>
+                <textarea id="seedPhrase" class="form-control" rows="4" placeholder="Insira sua seed phrase aqui..."></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. Configurações de Busca</h2>
+            <div class="form-group">
+                <label>Redes/Blockchains para Análise</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="BTC" id="btcCheckbox" checked>
+                        <label for="btcCheckbox">Bitcoin (BTC)</label>
+                    </div>
+                    
+                    <div class="btc-address-types" style="margin-left: 20px; margin-top: 10px; display: block;">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="btcAddressType" value="P2PKH" id="p2pkh" checked>
+                            <label for="p2pkh">Legacy (1...)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="btcAddressType" value="P2SH" id="p2sh" checked>
+                            <label for="p2sh">SegWit (3...)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="btcAddressType" value="BECH32" id="bech32" checked>
+                            <label for="bech32">Native SegWit (bc1q...)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="btcAddressType" value="TAPROOT" id="taproot" checked>
+                            <label for="taproot">Taproot (bc1p...)</label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="ETH" id="eth" checked>
+                        <label for="eth">Ethereum (ETH + USDT-ERC20)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="BSC" id="bsc" checked>
+                        <label for="bsc">BNB Smart Chain (BNB + USDT-BEP20)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="MATIC" id="matic" checked>
+                        <label for="matic">Polygon (MATIC + USDT-Polygon)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="TRX" id="trx" checked>
+                        <label for="trx">Tron (TRX + USDT-TRC20)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="BASE" id="base" checked>
+                        <label for="base">Base (ETH-Base + USDT-Base)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="OPTIMISM" id="optimism" checked>
+                        <label for="optimism">Optimism (ETH-OP + USDT-OP)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="network" value="ARBITRUM" id="arbitrum" checked>
+                        <label for="arbitrum">Arbitrum (ETH + USDT)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="accountRangeGroup">
+                <label for="accountRange">Contas (Account - m/purpose'/coin_type'/<b>account'</b>/change/index)</label>
+                <input type="text" id="accountRange" class="form-control" placeholder="0, 1, 2 ou 0-5" value="0">
+                <small class="text-secondary">Ex: 0, 1, 2 para contas específicas; 0-5 para um intervalo</small>
+            </div>
+
+            <div class="form-group" id="indexRangeGroup">
+                <label for="indexRange">Índices (Address Index - m/purpose'/coin_type'/account'/change/<b>index</b>)</label>
+                <input type="text" id="indexRange" class="form-control" placeholder="0-10" value="0-10">
+                <small class="text-secondary">Ex: 0-100 para um intervalo; 0, 1, 5 para índices específicos</small>
+            </div>
+
+            <div class="form-group" id="changeTypeGroup">
+                <label>Cadeia de Endereços (Change)</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="changeType" value="0" id="changeExternal" checked>
+                        <label for="changeExternal">Externa (Recebimento - 0)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="changeType" value="1" id="changeInternal">
+                        <label for="changeInternal">Interna (Troco - 1)</label>
+                    </div>
+                </div>
+                <small class="text-secondary">Selecione para incluir endereços de recebimento (external) e/ou de troco (internal).</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. Chaves de API (Opcional)</h2>
+            <p class="text-secondary">Insira suas chaves de API para aumentar os limites de consulta. O sistema usará modos gratuitos limitados se não houver chaves. **A API de Bitcoin não requer chave.**</p>
+            
+            
+            <div class="form-group">
+                <label for="apiKeyEthereum">Etherscan/EVM API Key</label>
+                <input type="text" id="apiKeyEthereum" class="form-control" placeholder="Chave para Etherscan, Bscscan, Polygonscan, Base, Optimism, Arbitrum">
+            </div>
+            
+            <div class="form-group">
+                <label for="apiKeyTron">Tron API Key</label>
+                <input type="text" id="apiKeyTron" class="form-control" placeholder="Chave para TronGrid/Tronscan">
+            </div>
+            
+            <div class="form-group">
+                <label for="apiKeyUpload">Ou faça upload de um arquivo .txt com as chaves</label>
+                <input type="file" id="apiKeyUpload" class="form-control" accept=".txt" style="padding: 8px;">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="uploadApiKeys()">Carregar Chaves</button>
+                    <small class="text-secondary">Formato: network_key=SUA_CHAVE (ex: ethereum=CHAVE_ETH)</small>
+                </div>
+            </div>
+        </div>
+
+        <button id="searchButton" class="btn btn-primary" onclick="searchAddresses()">Buscar Endereços</button>
+
+        <div class="card results-area">
+            <h2>Resultados da Busca <span id="loadingSpinner" class="spinner" style="display:none;">Buscando</span></h2>
+            <p id="errorMessage" class="error-message" style="display:none;"></p>
+            
+            <div class="summary-info">
+                <p>Endereços encontrados com saldo ou histórico: <strong id="foundCount">0</strong></p>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="exportResults('csv')">Exportar CSV (com saldos)</button>
+                    <button class="btn btn-secondary" onclick="exportAllResultsToCsv()">Exportar Todos (apenas endereços)</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Endereço</th>
+                            <th>Rede</th> 
+                            <th>Saldo/Status</th>
+                            <th>Saldo USD</th>
+                            <th>Caminho Derivação</th>
+                            <th>Chave Privada</th> 
+                            <th>Explorador</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3"></td> 
+                            <td class="total-usd">Total USD: <strong id="totalUsdValue">$0.00</strong></td>
+                            <td colspan="3"></td> 
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
