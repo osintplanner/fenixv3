@@ -32,19 +32,10 @@ def parse_range_input(input_str):
     
     return []
 
-# A função derive_custom_network não será mais necessária para Base, Optimism, Arbitrum
-# pois elas passarão a usar o mesmo fluxo BIP44 que ETH/BSC/MATIC.
-# No entanto, se houver outras 'redes personalizadas' futuras que exigem
-# caminhos fora do BIP44 padrão ou lógicas complexas, esta função poderia ser adaptada.
-# Por ora, para o objetivo de unificar endereços EVM, ela pode ser removida ou ignorada.
-# Vou mantê-la, mas ela não será mais chamada para as redes EVM listadas.
 def derive_custom_network(seed_bytes, account_idx, addr_idx, config, change_type):
     """Derive addresses for custom networks (BASE, OPTIMISM, ARBITRUM)."""
     try:
-        # ATENÇÃO: Esta função não será mais chamada para BASE, OPTIMISM, ARBITRUM
-        # se o coin_type delas for alterado para Bip44Coins.ETHEREUM (60).
-        # Ela é mantida para compatibilidade futura ou outras necessidades.
-        if change_type != 0: # Assumindo que custom_network é apenas external chain
+        if change_type != 0:
             return None
 
         path_template = config["path_template"]
@@ -106,29 +97,27 @@ NETWORK_CONFIGS = {
         "private_key_format": "HEX",
         "address_format": lambda pub_key: TrxAddrEncoder.EncodeKey(pub_key.RawCompressed().ToBytes())
     },
-    # Alterado para usar Bip44Coins.ETHEREUM (coin_type 60)
     "BASE": {
-        "coin_type": Bip44Coins.ETHEREUM, # Alterado de 8453 para ETHEREUM (60)
+        "coin_type": Bip44Coins.ETHEREUM,
         "private_key_format": "HEX",
         "address_format": lambda pub_key: EthAddrEncoder.EncodeKey(pub_key.RawCompressed().ToBytes()),
-        # "path_template": "m/44'/8453'/{account}'/0/{address}" # Não mais necessário
     },
     "OPTIMISM": {
-        "coin_type": Bip44Coins.ETHEREUM, # Alterado de 10 para ETHEREUM (60)
+        "coin_type": Bip44Coins.ETHEREUM,
         "private_key_format": "HEX",
         "address_format": lambda pub_key: EthAddrEncoder.EncodeKey(pub_key.RawCompressed().ToBytes()),
-        # "path_template": "m/44'/10'/{account}'/0/{address}" # Não mais necessário
     },
     "ARBITRUM": {
-        "coin_type": Bip44Coins.ETHEREUM, # Alterado de 42161 para ETHEREUM (60)
+        "coin_type": Bip44Coins.ETHEREUM,
         "private_key_format": "HEX",
         "address_format": lambda pub_key: EthAddrEncoder.EncodeKey(pub_key.RawCompressed().ToBytes()),
-        # "path_template": "m/44'/42161'/{account}'/0/{address}" # Não mais necessário
     }
 }
 
-def derive_addresses(seed_phrase, selected_networks,
+# INÍCIO DA ALTERAÇÃO
+def derive_addresses(seed_phrase, passphrase, selected_networks,
                     account_indices_str, address_indices_str, bitcoin_address_types, change_types):
+# FIM DA ALTERAÇÃO
     validator = Bip39MnemonicValidator()
     if not validator.IsValid(seed_phrase):
         words = seed_phrase.split()
@@ -136,7 +125,10 @@ def derive_addresses(seed_phrase, selected_networks,
             raise ValueError("Seed phrase inválida. Deve conter 12, 15, 18, 21 ou 24 palavras.")
         raise ValueError("Seed phrase inválida. Verifique a ortografia das palavras.")
 
-    seed_bytes = Bip39SeedGenerator(seed_phrase).Generate()
+    # INÍCIO DA ALTERAÇÃO
+    # Gera a semente usando a passphrase. Se a passphrase for uma string vazia, o resultado é o mesmo que sem ela.
+    seed_bytes = Bip39SeedGenerator(seed_phrase).Generate(passphrase)
+    # FIM DA ALTERAÇÃO
     
     all_derived_wallets = []
 
@@ -148,17 +140,15 @@ def derive_addresses(seed_phrase, selected_networks,
     if not address_indices:
         address_indices = [0] 
     
-    # Mapeamento confiável de coin types
-    # Este dicionário será usado para gerar o 'derivation_path' correto na saída
     COIN_TYPE_MAP = {
         "BTC": 0,
         "ETH": 60,
         "BSC": 60,
         "MATIC": 60,
         "TRX": 195,
-        "BASE": 60,       # Alterado para 60
-        "OPTIMISM": 60,   # Alterado para 60
-        "ARBITRUM": 60    # Alterado para 60
+        "BASE": 60,
+        "OPTIMISM": 60,
+        "ARBITRUM": 60
     }
 
     for network in selected_networks:
@@ -169,11 +159,10 @@ def derive_addresses(seed_phrase, selected_networks,
 
         print(f"Derivando para rede: {network}")
         
-        # Use o coin_type do mapa para construir o caminho, garantindo 60 para EVMs unificadas
         coin_type_num = COIN_TYPE_MAP.get(network, 60)
 
         for account_idx in account_indices:
-            for change_type in change_types: # Loop through selected change types (0 for external, 1 for internal)
+            for change_type in change_types:
                 if network == "BTC":
                     if not bitcoin_address_types:
                         print("Aviso: Nenhum tipo de endereço Bitcoin selecionado. Pulando BTC.")
@@ -234,11 +223,9 @@ def derive_addresses(seed_phrase, selected_networks,
                         except Exception as e:
                             print(f"Erro ao derivar endereço(s) para BTC {btc_addr_type} na conta {account_idx}, change {change_type}: {str(e)}")
 
-                # Agora todas as redes EVM (ETH, BSC, MATIC, BASE, OPTIMISM, ARBITRUM) usarão o mesmo bloco de código
-                # porque seus coin_types foram unificados para Bip44Coins.ETHEREUM (60)
-                elif network in ["ETH", "BSC", "MATIC", "BASE", "OPTIMISM", "ARBITRUM", "TRX"]: # TRX também usa Bip44 padrão
+                elif network in ["ETH", "BSC", "MATIC", "BASE", "OPTIMISM", "ARBITRUM", "TRX"]:
                     try:
-                        bip_obj = Bip44.FromSeed(seed_bytes, config["coin_type"]) # config["coin_type"] agora será Bip44Coins.ETHEREUM para as EVMs
+                        bip_obj = Bip44.FromSeed(seed_bytes, config["coin_type"])
                         account_node = bip_obj.Purpose().Coin().Account(account_idx)
                         
                         change_bip_enum = Bip44Changes.CHAIN_EXT if change_type == 0 else Bip44Changes.CHAIN_INT
