@@ -23,7 +23,18 @@
                 <label for="seedPhrase">Seed Mnemônica (12 ou 24 palavras)</label>
                 <textarea id="seedPhrase" class="form-control" rows="4" placeholder="Insira sua seed phrase aqui..."></textarea>
             </div>
-        </div>
+            <div class="form-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="usePassphrase" name="usePassphrase">
+                    <label for="usePassphrase">Usar Passphrase (BIP39)</label>
+                </div>
+            </div>
+            <div class="form-group" id="passphraseGroup" style="display: none;">
+                <label for="passphrase">Passphrase</label>
+                <input type="password" id="passphrase" class="form-control" placeholder="Insira sua passphrase opcional aqui...">
+                <small class="text-secondary">A passphrase é uma camada extra de segurança. Certifique-se de guardá-la bem.</small>
+            </div>
+            </div>
 
         <div class="card">
             <h2>2. Configurações de Busca</h2>
