@@ -5,7 +5,6 @@ import threading
 import time
 import traceback
 from flask import Flask, render_template, request, jsonify
-from werkzeug.serving import run_simple # Mantenha para desenvolvimento local se quiser
 
 # Importar módulos utilitários
 from utils.wallet_derivation import derive_addresses
@@ -13,9 +12,8 @@ from utils.blockchain_api import get_blockchain_data
 
 # --- Configurações da Aplicação ---
 DEBUG_MODE = True
-# Obtenha a porta do ambiente (Render, Heroku, etc.) ou use 5000 como fallback local
-PORT = int(os.environ.get("PORT", 5000))
-HOST = '0.0.0.0' # O Render precisa que você escute em 0.0.0.0
+FLASK_PORT = 5000
+FLASK_HOST = '127.0.0.1'
 
 # --- Inicialização do Flask ---
 app = Flask(__name__)
@@ -40,7 +38,11 @@ def derive_and_check():
         if not data:
             return jsonify({"error": "Dados JSON inválidos ou vazios."}), 400
 
+        # INÍCIO DA ALTERAÇÃO
         seed_phrase = data.get('seed_phrase')
+        passphrase = data.get('passphrase', '') # Recebe a passphrase, com valor padrão vazio
+        # FIM DA ALTERAÇÃO
+        
         selected_networks = data.get('selected_networks', [])
         account_indices_str = data.get('account_indices', '0')
         address_indices_str = data.get('address_indices', '0-10')
@@ -52,25 +54,31 @@ def derive_and_check():
             return jsonify({"error": "Seed phrase é obrigatória."}), 400
 
         print(f"Recebida seed: {seed_phrase[:10]}...")
+        # INÍCIO DA ALTERAÇÃO
+        print(f"Passphrase usada: {'Sim' if passphrase else 'Não'}")
+        # FIM DA ALTERAÇÃO
         print(f"Redes selecionadas: {selected_networks}")
         print(f"Contas: {account_indices_str}")
         print(f"Índices: {address_indices_str}")
         print(f"Tipos BTC: {bitcoin_address_types}")
         print(f"Tipos de Cadeia (Change): {change_types}")
 
+        # INÍCIO DA ALTERAÇÃO
         # Chama derive_addresses para obter a lista COMPLETA de carteiras derivadas
         derived_wallets_full_list = derive_addresses(
             seed_phrase,
+            passphrase, # Passa a passphrase para a função
             selected_networks,
             account_indices_str,
             address_indices_str,
             bitcoin_address_types,
             change_types
         )
+        # FIM DA ALTERAÇÃO
         print(f"Total de endereços derivados (lista completa): {len(derived_wallets_full_list)}")
 
-        results_filtered = [] # Esta será a lista filtrada para exibição na tabela
-        for i, wallet_info in enumerate(derived_wallets_full_list): # Itera sobre a lista COMPLETA
+        results_filtered = []
+        for i, wallet_info in enumerate(derived_wallets_full_list):
             address = wallet_info['address']
             network = wallet_info['network']
             derivation_path = wallet_info['derivation_path']
@@ -79,7 +87,6 @@ def derive_and_check():
 
             print(f"Consultando dados para endereço {address} na rede {network}")
 
-            # Mapeia as chaves de API do objeto api_keys (vindo do JS)
             api_key_for_network = None
             if network == "BTC":
                 api_key_for_network = api_keys.get('bitcoin')
@@ -90,19 +97,14 @@ def derive_and_check():
 
             blockchain_data = get_blockchain_data(address, network, api_key_for_network)
 
-
-            # Verifica se há error_fatal na resposta da blockchain_api
             if blockchain_data and not blockchain_data.get("error_fatal"): 
                 balance_crypto = blockchain_data.get('balance_crypto', 0)
                 balance_usd = blockchain_data.get('balance_usd', 0)
                 has_transactions = blockchain_data.get('has_transactions', False)
                 explorer_link = blockchain_data.get('explorer_link', '#')
                 has_real_balance = blockchain_data.get('has_real_balance', False)
-
-                # Saldo em satoshis para BTC
                 balance_satoshi = blockchain_data.get('balance_satoshi', 0)
 
-                # O filtro agora usa has_real_balance ou has_transactions
                 if has_real_balance or has_transactions:
                     result_item = {
                         "address": address,
@@ -122,13 +124,11 @@ def derive_and_check():
             elif blockchain_data and blockchain_data.get("error_fatal"):
                 print(f"AVISO: Endereço {address} na rede {network} não adicionado devido a erro fatal da API: {blockchain_data['error_fatal']}")
             
-            # Pausa para evitar rate limits
             if i % 5 == 0 and network != "BTC": 
                 time.sleep(0.5)
             elif network == "BTC": 
                 time.sleep(0.05)
             
-        # Retorna a lista filtrada para exibição E a lista completa para exportação
         return jsonify({"success": True, "results": results_filtered, "all_derived_wallets": derived_wallets_full_list})
 
     except ValueError as e:
@@ -157,31 +157,22 @@ def run_flask_app_in_thread():
     """
     Inicia o servidor Flask.
     """
-    url = f"http://{HOST}:{PORT}" # Use HOST e PORT dinâmicos
+    url = f"http://{FLASK_HOST}:{FLASK_PORT}"
     print(f"Servidor Flask rodando em {url}")
-    # Para deploy em produção, é fortemente recomendado usar um servidor WSGI como Gunicorn.
-    # Mas para o Werkzeug direto (como você está usando), a chamada é a seguinte:
-    run_simple(HOST, PORT, app, use_reloader=False, use_debugger=False) # Use HOST e PORT dinâmicos
+    from werkzeug.serving import run_simple
+    run_simple(FLASK_HOST, FLASK_PORT, app, use_reloader=False, use_debugger=False)
 
 # --- Ponto de Entrada Principal ---
 if __name__ == '__main__':
-    # Se estiver rodando localmente (não no Render), abra o navegador.
-    # No Render, não é necessário e não funcionaria.
-    if "PORT" not in os.environ: # Verifica se a variável PORT do ambiente não está definida (indicando ambiente local)
-        flask_thread = threading.Thread(target=run_flask_app_in_thread)
-        flask_thread.daemon = True
-        flask_thread.start()
+    flask_thread = threading.Thread(target=run_flask_app_in_thread)
+    flask_thread.daemon = True
+    flask_thread.start()
 
-        open_browser_after_delay(f"http://{HOST}:{PORT}")
+    open_browser_after_delay(f"http://{FLASK_HOST}:{FLASK_PORT}")
 
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\nAplicação encerrada pelo usuário.")
-            os._exit(0)
-    else: # Se estiver no Render, apenas inicie o servidor Flask diretamente.
-        print(f"Servidor Flask iniciando no Render em {HOST}:{PORT}")
-        # No ambiente do Render, `run_simple` diretamente no thread principal já serve
-        # porque o Render irá gerenciar o ciclo de vida do processo.
-        run_simple(HOST, PORT, app, use_reloader=False, use_debugger=False)
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nAplicação encerrada pelo usuário.")
+        os._exit(0)
