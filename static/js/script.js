@@ -38,10 +38,19 @@ async function searchAddresses() {
         alert('Por favor, selecione pelo menos um tipo de cadeia de endereços (Externa/Interna).');
         return;
     }
+    
+    // INÍCIO DA ALTERAÇÃO
+    const usePassphrase = document.getElementById('usePassphrase').checked;
+    const passphrase = usePassphrase ? document.getElementById('passphrase').value : '';
+    // FIM DA ALTERAÇÃO
+
+    // Safely get API keys, defaulting to empty string if element is null
+    const apiKeyEthereumElement = document.getElementById('apiKeyEthereum');
+    const apiKeyTronElement = document.getElementById('apiKeyTron');
 
     const apiKeys = {
-        ethereum: document.getElementById('apiKeyEthereum').value.trim(), // Esta chave será usada para todas as EVMs
-        tron: document.getElementById('apiKeyTron').value.trim()
+        ethereum: apiKeyEthereumElement ? apiKeyEthereumElement.value.trim() : '',
+        tron: apiKeyTronElement ? apiKeyTronElement.value.trim() : ''
     };
 
     // Exibir spinner e área de resultados, esconder mensagens de erro
@@ -66,23 +75,24 @@ async function searchAddresses() {
             headers: {
                 'Content-Type': 'application/json'
             },
+            // INÍCIO DA ALTERAÇÃO
             body: JSON.stringify({
                 seed_phrase: seedPhrase,
+                passphrase: passphrase, // Passphrase adicionada
                 selected_networks: selectedNetworks,
                 account_indices: accountRange,
                 address_indices: indexRange,
                 bitcoin_address_types: btcAddressTypes,
-                api_keys: apiKeys, // Enviando o objeto apiKeys
-                change_types: changeTypes // Adicionando os tipos de change ao body
+                api_keys: apiKeys, 
+                change_types: changeTypes
             })
+            // FIM DA ALTERAÇÃO
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            displayResults(result.results); // Exibe apenas os resultados filtrados
-            // Armazena a lista completa para exportação
-            // O backend deve enviar a lista completa como 'all_derived_wallets'
+            displayResults(result.results);
             allDerivedWalletsData = result.all_derived_wallets || []; 
         } else {
             document.getElementById('errorMessage').textContent = `Erro: ${result.error || 'Ocorreu um erro desconhecido.'}`;
@@ -119,16 +129,13 @@ function displayResults(results) {
         results.forEach(item => {
             const row = tbody.insertRow();
             
-            // Endereço (com quebra de linha permitida)
             const addressCell = row.insertCell();
             addressCell.textContent = item.address;
             addressCell.style.wordBreak = 'break-all';
 
-            // Coluna: Rede
             const networkCell = row.insertCell();
             networkCell.textContent = item.network;
             
-            // Saldo/Status
             const balanceCryptoNum = parseFloat(item.balance_crypto);
             const balanceUsdNum = parseFloat(item.balance_usd);
 
@@ -154,35 +161,30 @@ function displayResults(results) {
             balanceCell.textContent = balanceDisplay;
             balanceCell.classList.add(statusClass);
 
-            // Saldo USD
             const usdCell = row.insertCell();
             const displayUsd = !isNaN(balanceUsdNum) && balanceUsdNum > 0 ? `$${balanceUsdNum.toFixed(2)}` : 'N/A';
             usdCell.textContent = displayUsd;
             if (!isNaN(balanceUsdNum) && balanceUsdNum > 0) {
-                totalUsdSum += balanceUsdNum; // Soma o valor USD
+                totalUsdSum += balanceUsdNum;
             }
             
-            // Caminho Derivação
             const pathCell = row.insertCell();
             pathCell.textContent = item.derivation_path;
             
-            // Chave Privada (agora com botão de cópia e permitindo quebra de linha)
             const pkCell = row.insertCell();
             pkCell.classList.add('private-key-cell');
-            // Cria um span para o texto da chave privada
             const pkTextSpan = document.createElement('span');
             pkTextSpan.textContent = item.private_key;
 
-            // Cria o botão de cópia
             const copyButton = document.createElement('button');
-            copyButton.textContent = '📋'; // Ícone de clipboard
+            copyButton.textContent = '📋';
             copyButton.title = 'Copiar chave privada';
-            copyButton.classList.add('copy-btn'); // Adiciona uma classe para estilização (opcional)
+            copyButton.classList.add('copy-btn');
             copyButton.onclick = async () => {
                 try {
                     await navigator.clipboard.writeText(item.private_key);
-                    copyButton.textContent = '✅'; // Feedback visual
-                    setTimeout(() => { copyButton.textContent = '📋'; }, 2000); // Volta ao normal
+                    copyButton.textContent = '✅';
+                    setTimeout(() => { copyButton.textContent = '📋'; }, 2000);
                 } catch (err) {
                     console.error('Falha ao copiar:', err);
                     alert('Erro ao copiar a chave privada.');
@@ -192,7 +194,6 @@ function displayResults(results) {
             pkCell.appendChild(pkTextSpan);
             pkCell.appendChild(copyButton);
 
-            // Explorador
             const explorerCell = row.insertCell();
             const explorerLink = document.createElement('a');
             explorerLink.href = item.explorer_link;
@@ -204,7 +205,6 @@ function displayResults(results) {
         });
     }
 
-    // Atualiza o total USD no rodapé da tabela
     document.getElementById('totalUsdValue').textContent = `$${totalUsdSum.toFixed(2)}`;
 }
 
@@ -214,19 +214,15 @@ function exportResults(format) {
         const rows = table.querySelectorAll('tr');
         let csvContent = "";
 
-        // Adiciona o Byte Order Mark (BOM) para garantir a codificação UTF-8 no Excel
         csvContent += "\ufeff"; 
 
-        // Adiciona o cabeçalho
         const headers = [];
         table.querySelectorAll('thead th').forEach(th => {
             headers.push(`"${th.textContent.trim()}"`);
         });
         csvContent += headers.join(',') + '\n';
 
-        // Adiciona as linhas do corpo
         rows.forEach((row, rowIndex) => {
-            // Ignora a primeira linha (cabeçalho) e a última linha (rodapé)
             if (rowIndex === 0 || row.closest('tfoot')) {
                 return; 
             }
@@ -234,34 +230,31 @@ function exportResults(format) {
             const rowData = [];
             row.querySelectorAll('td').forEach((cell, cellIndex) => {
                 let text;
-                // Para a célula da chave privada, pegamos o texto do span dentro dela
                 if (cell.classList.contains('private-key-cell')) {
                     const pkSpan = cell.querySelector('span');
                     text = pkSpan ? pkSpan.textContent.trim() : '';
-                } else if (cellIndex === 6) { // Para a coluna "Explorador" (índice 6)
+                } else if (cellIndex === 6) {
                     const linkElement = cell.querySelector('a');
-                    text = linkElement ? linkElement.href : ''; // Pega o href do link
+                    text = linkElement ? linkElement.href : '';
                 }
                 else {
                     text = cell.textContent.trim();
                 }
                 
-                rowData.push(`"${text.replace(/"/g, '""')}"`); // Escapa aspas duplas dentro dos dados
+                rowData.push(`"${text.replace(/"/g, '""')}"`);
             });
             if (rowData.length > 0) {
                 csvContent += rowData.join(',') + '\n';
             }
         });
 
-        // Adiciona a linha do total USD do rodapé
         const totalUsdValue = document.getElementById('totalUsdValue').textContent;
-        // Alinha o "Total USD" corretamente no CSV.
         csvContent += `\n"",,,,"Total USD","${totalUsdValue}"\n`; 
 
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        if (link.download !== undefined) { // Feature detection for download attribute
+        if (link.download !== undefined) {
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
             link.setAttribute('download', 'fenix_resultados_filtrados.csv');
@@ -271,7 +264,7 @@ function exportResults(format) {
             document.body.removeChild(link);
         } else {
             alert('Seu navegador não suporta download automático de arquivos. Por favor, copie o conteúdo e salve como .csv manualmente.');
-            console.log(csvContent); // Para debug, se o download não funcionar
+            console.log(csvContent);
         }
     } else {
         alert(`Formato de exportação ${format.toUpperCase()} não suportado.`);
@@ -286,22 +279,19 @@ function exportAllResultsToCsv() {
 
     let csvContent = "";
 
-    // Adiciona o Byte Order Mark (BOM) para garantir a codificação UTF-8 no Excel
     csvContent += "\ufeff"; 
 
-    // Cabeçalho para todos os endereços derivados
     const headers = ["Endereço", "Rede", "Caminho Derivação", "Chave Privada", "Tipo de Endereço"];
     csvContent += headers.map(h => `"${h}"`).join(',') + '\n';
 
-    // Conteúdo
     allDerivedWalletsData.forEach(item => {
         const rowData = [
             item.address,
             item.network,
             item.derivation_path,
             item.private_key,
-            item.address_type || 'N/A' // Garante que address_type seja incluído, mesmo se 'N/A'
-        ].map(data => `"${String(data).replace(/"/g, '""')}"`); // Converte para string e escapa aspas
+            item.address_type || 'N/A'
+        ].map(data => `"${String(data).replace(/"/g, '""')}"`);
         csvContent += rowData.join(',') + '\n';
     });
 
@@ -335,56 +325,66 @@ function uploadApiKeys() {
     reader.onload = function(e) {
         const content = e.target.result;
         const lines = content.split('\n');
-        let keysLoadedCount = 0; // Contagem de chaves carregadas
+        let keysLoadedCount = 0;
         lines.forEach(line => {
             const trimmedLine = line.trim();
-            // Espera o formato "network_key=SUA_CHAVE"
             if (trimmedLine && trimmedLine.includes('=')) {
-                const parts = trimmedLine.split('=', 2); // Divide no primeiro '='
-                const keyName = parts[0].trim().toLowerCase(); // ex: 'ethereum', 'tron'
+                const parts = trimmedLine.split('=', 2);
+                const keyName = parts[0].trim().toLowerCase();
                 const keyValue = parts[1].trim();
 
-                // Associa a chave ao campo correto na interface
-                if (keyName === 'ethereum') { // Esta chave será usada para todas as EVMs (ETH, BSC, MATIC, BASE, OPTIMISM, ARBITRUM)
-                    document.getElementById('apiKeyEthereum').value = keyValue;
-                    keysLoadedCount++;
-                } else if (keyName === 'tron') {
-                    document.getElementById('apiKeyTron').value = keyValue;
+                const targetElement = document.getElementById(`apiKey${keyName.charAt(0).toUpperCase() + keyName.slice(1)}`);
+                if (targetElement) {
+                    targetElement.value = keyValue;
                     keysLoadedCount++;
                 }
             }
         });
         alert(`Chaves carregadas do arquivo: ${keysLoadedCount} chave(s) preenchida(s).`);
-        fileInput.value = ''; // Limpa o input do arquivo após o carregamento
+        fileInput.value = '';
     };
     reader.readAsText(file);
 }
 
-
-// Atualizações para o novo design (mantendo toda a lógica existente)
-
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.results-area').style.display = 'none';
     
-    // Adiciona evento para mostrar/esconder tipos de endereço BTC quando BTC é clicado
     const btcCheckbox = document.getElementById('btcCheckbox');
     const btcAddressTypesDiv = document.querySelector('.btc-address-types');
     
-    btcCheckbox.addEventListener('change', () => {
-        btcAddressTypesDiv.style.display = btcCheckbox.checked ? 'block' : 'none';
-        if (!btcCheckbox.checked) {
-            // Desmarcar todos os tipos de endereço BTC se a caixa principal for desmarcada
-            document.querySelectorAll('.btc-address-types input[type="checkbox"]').forEach(cb => cb.checked = false);
-        }
-    });
+    if (btcCheckbox && btcAddressTypesDiv) {
+        btcCheckbox.addEventListener('change', () => {
+            btcAddressTypesDiv.style.display = btcCheckbox.checked ? 'block' : 'none';
+            if (!btcCheckbox.checked) {
+                document.querySelectorAll('.btc-address-types input[type="checkbox"]').forEach(cb => cb.checked = false);
+            }
+        });
+    }
     
-    // Animação suave ao rolar para os resultados
+    // INÍCIO DA ALTERAÇÃO
+    const usePassphraseCheckbox = document.getElementById('usePassphrase');
+    const passphraseGroup = document.getElementById('passphraseGroup');
+
+    if (usePassphraseCheckbox && passphraseGroup) {
+        usePassphraseCheckbox.addEventListener('change', () => {
+            if (usePassphraseCheckbox.checked) {
+                passphraseGroup.style.display = 'block';
+            } else {
+                passphraseGroup.style.display = 'none';
+                document.getElementById('passphrase').value = '';
+            }
+        });
+    }
+    // FIM DA ALTERAÇÃO
+    
     const searchButton = document.getElementById('searchButton');
     const resultsArea = document.querySelector('.results-area');
     
-    searchButton.addEventListener('click', () => {
-        if (resultsArea.style.display === 'block') {
-            resultsArea.scrollIntoView({ behavior: 'smooth' });
-        }
-    });
+    if (searchButton && resultsArea) {
+        searchButton.addEventListener('click', () => {
+            if (resultsArea.style.display === 'block') {
+                resultsArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
 });
